@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Gastos Pessoais</title>
+  <style>
+    /* Reset básico e tipografia moderna */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      color: #1f2937;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Cartão principal do formulário */
+    .container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      padding: 32px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    p.subtitulo {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+
+    .campo-grupo {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #111827;
+      background-color: #f9fafb;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #10b981;
+      background-color: #ffffff;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #10b981;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #059669;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+
+    button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* Mensagens de feedback (sucesso ou erro) */
+    #mensagem {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      font-weight: 500;
+      display: none; /* Escondido por padrão */
+    }
+
+    .sucesso {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .erro {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Controle de Gastos</h1>
+    <p class="subtitulo">Registre suas despesas direto na planilha</p>
+
+    <form id="formGastos">
+      <div class="campo-grupo">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" placeholder="Ex: Almoço no restaurante" required>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="categoria">Categoria</label>
+        <select id="categoria" required>
+          <option value="" disabled selected>Selecione uma categoria</option>
+          <option value="Alimentação">Alimentação</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Lazer">Lazer</option>
+          <option value="Estudos">Estudos</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+
+      <div class="campo-grupo">
+        <label for="valor">Valor (R$)</label>
+        <input type="number" id="valor" step="0.01" min="0.01" placeholder="0.00" required>
+      </div>
+
+      <button type="submit" id="btnSalvar">Salvar Gasto</button>
+    </form>
+
+    <div id="mensagem"></div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "COhttps://script.google.com/macros/s/AKfycbynse-ufYi207BQqbx2rpD5qSCwovODoby66K07kYf4oqAqRSk6PJ0HGKGHxmmVnUI/exec";
+
+    const form = document.getElementById("formGastos");
+    const btnSalvar = document.getElementById("btnSalvar");
+    const divMensagem = document.getElementById("mensagem");
+
+    form.addEventListener("submit", function(evento) {
+      // Impede que a página recarregue ao enviar o formulário
+      evento.preventDefault();
+
+      // Desabilita o botão e muda o texto para dar feedback visual
+      btnSalvar.disabled = true;
+      btnSalvar.textContent = "Salvando...";
+      divMensagem.style.display = "none";
+
+      // Coleta os valores digitados nos campos
+      const dadosGasto = {
+        descricao: document.getElementById("descricao").value.trim(),
+        categoria: document.getElementById("categoria").value,
+        valor: document.getElementById("valor").value
+      };
+
+      // Envia os dados via POST como texto simples para evitar bloqueio de CORS
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(dadosGasto)
+      })
+      .then(function(resposta) {
+        return resposta.json();
+      })
+      .then(function(resultado) {
+        if (resultado.status === "sucesso") {
+          mostrarMensagem("Gasto salvo com sucesso!", "sucesso");
+          form.reset(); // Limpa todos os campos do formulário
+        } else {
+          mostrarMensagem("Erro no servidor: " + resultado.mensagem, "erro");
+        }
+      })
+      .catch(function(erro) {
+        mostrarMensagem("Erro de conexão. Verifique a URL do script e tente novamente.", "erro");
+        console.error("Detalhes do erro:", erro);
+      })
+      .finally(function() {
+        // Reabilita o botão independentemente de ter dado certo ou errado
+        btnSalvar.disabled = false;
+        btnSalvar.textContent = "Salvar Gasto";
+      });
+    });
+
+    // Função auxiliar para exibir alertas bonitos na tela
+    function mostrarMensagem(texto, tipo) {
+      divMensagem.textContent = texto;
+      divMensagem.className = tipo;
+      divMensagem.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
